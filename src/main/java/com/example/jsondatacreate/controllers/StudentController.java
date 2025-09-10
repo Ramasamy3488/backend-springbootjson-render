@@ -156,7 +156,7 @@ public class StudentController {
 	        return ResponseEntity.badRequest().body("Error: Email already exists!");
 	    }
 
-	    // ✅ Validation: Batch must be one of the allowed values
+	    //  Validation: Batch must be one of the allowed values
 	    List<String> allowedBatches = List.of("January", "February", "March", "April");
 	    if (student.getBatch() == null || !allowedBatches.contains(student.getBatch())) {
 	        return ResponseEntity.badRequest().body("Error: Batch must be January, February, March, or April!");
@@ -184,23 +184,69 @@ public class StudentController {
 
 	
 	// PUT - update student by ID
-    @PutMapping("/students/{id}")
-    public String updateStudent(@PathVariable int id, @RequestBody Student newStudent) {
-        List<Student> students = getStudents();
-        boolean found = false;
+    // @PutMapping("/students/{id}")
+    // public String updateStudent(@PathVariable int id, @RequestBody Student newStudent) {
+    //     List<Student> students = getStudents();
+    //     boolean found = false;
 
-        for (int i = 0; i < students.size(); i++) {
-            if (students.get(i).getId() == id) {
-                students.set(i, newStudent); // replace with updated student
-                found = true;
-                break;
-            }
-        }
+    //     for (int i = 0; i < students.size(); i++) {
+    //         if (students.get(i).getId() == id) {
+    //             students.set(i, newStudent); // replace with updated student
+    //             found = true;
+    //             break;
+    //         }
+    //     }
 
-        if (!found) return "Student not found!";
-        writeAllStudents(students);
-        return "Student updated successfully!";
+    //     if (!found) return "Student not found!";
+    //     writeAllStudents(students);
+    //     return "Student updated successfully!";
+    // }
+
+
+	// ✅ PUT - update student by ID
+@PutMapping("/students/{id}")
+public ResponseEntity<String> updateStudent(@PathVariable int id, @RequestBody Student newStudent) {
+    List<Student> students = getStudents();
+
+    // Validation: Age must be >= 18
+    if (newStudent.getAge() < 18) {
+        return ResponseEntity.badRequest().body("Error: Age must be 18 or above!");
     }
+
+    // Validation: Email must be unique (except for the same student being updated)
+    boolean emailExists = students.stream()
+            .anyMatch(s -> s.getEmail() != null &&
+                           s.getEmail().equalsIgnoreCase(newStudent.getEmail()) &&
+                           s.getId() != id); // ignore same student
+    if (emailExists) {
+        return ResponseEntity.badRequest().body("Error: Email already exists!");
+    }
+
+    // Validation: Batch must be valid
+    List<String> allowedBatches = List.of("January", "February", "March", "April");
+    if (newStudent.getBatch() == null || !allowedBatches.contains(newStudent.getBatch())) {
+        return ResponseEntity.badRequest().body("Error: Batch must be January, February, March, or April!");
+    }
+
+    // Find student by ID and update
+    boolean found = false;
+    for (int i = 0; i < students.size(); i++) {
+        if (students.get(i).getId() == id) {
+            newStudent.setId(id); // keep the same ID
+            students.set(i, newStudent);
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        return ResponseEntity.badRequest().body("Error: Student not found!");
+    }
+
+    writeAllStudents(students);
+    return ResponseEntity.ok("Student updated successfully!");
+}
+
 
 	// DELETE - delete student by ID
 	@DeleteMapping("/students/{id}")
@@ -231,3 +277,4 @@ public class StudentController {
 	 
 	
 }
+
