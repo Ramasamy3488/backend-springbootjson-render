@@ -100,6 +100,44 @@ public class StudentController {
 //	}
 	
 	
+//	@PostMapping("/students")
+//	public ResponseEntity<String> addStudent(@RequestBody Student student) {
+//
+//	    List<Student> students = getStudents();
+//
+//	    // Validation: Age must be >= 18
+//	    if (student.getAge() < 18) {
+//	        return ResponseEntity.badRequest().body("Error: Age must be 18 or above!");
+//	    }
+//
+//	    // Validation: Email must be unique (case-insensitive)
+//	    boolean emailExists = students.stream()
+//	            .anyMatch(s -> s.getEmail() != null &&
+//	                           s.getEmail().equalsIgnoreCase(student.getEmail()));
+//	    if (emailExists) {
+//	        return ResponseEntity.badRequest().body("Error: Email already exists!");
+//	    }
+//
+//	    // Generate new ID
+//	    int newId = students.stream()
+//	                        .mapToInt(Student::getId)
+//	                        .max()
+//	                        .orElse(100) + 1;
+//	    student.setId(newId);
+//
+//	    // Save new student
+//	    try (FileWriter writer = new FileWriter(FILE_NAME, true)) { // append mode
+//	        gson.toJson(student, writer);
+//	        writer.write("\n");
+//	    } catch (IOException e) {
+//	        e.printStackTrace();
+//	        return ResponseEntity.internalServerError().body("Error saving student!");
+//	    }
+//
+//	    return ResponseEntity.ok("Student saved successfully with ID: " + newId);
+//	}
+	
+	
 	@PostMapping("/students")
 	public ResponseEntity<String> addStudent(@RequestBody Student student) {
 
@@ -110,12 +148,18 @@ public class StudentController {
 	        return ResponseEntity.badRequest().body("Error: Age must be 18 or above!");
 	    }
 
-	    // Validation: Email must be unique (case-insensitive)
+	    // Validation: Email must be unique
 	    boolean emailExists = students.stream()
 	            .anyMatch(s -> s.getEmail() != null &&
 	                           s.getEmail().equalsIgnoreCase(student.getEmail()));
 	    if (emailExists) {
 	        return ResponseEntity.badRequest().body("Error: Email already exists!");
+	    }
+
+	    // ✅ Validation: Batch must be one of the allowed values
+	    List<String> allowedBatches = List.of("January", "February", "March", "April");
+	    if (student.getBatch() == null || !allowedBatches.contains(student.getBatch())) {
+	        return ResponseEntity.badRequest().body("Error: Batch must be January, February, March, or April!");
 	    }
 
 	    // Generate new ID
@@ -126,7 +170,7 @@ public class StudentController {
 	    student.setId(newId);
 
 	    // Save new student
-	    try (FileWriter writer = new FileWriter(FILE_NAME, true)) { // append mode
+	    try (FileWriter writer = new FileWriter(FILE_NAME, true)) {
 	        gson.toJson(student, writer);
 	        writer.write("\n");
 	    } catch (IOException e) {
@@ -136,6 +180,7 @@ public class StudentController {
 
 	    return ResponseEntity.ok("Student saved successfully with ID: " + newId);
 	}
+
 
 	
 	// PUT - update student by ID
